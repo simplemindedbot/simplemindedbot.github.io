@@ -1,53 +1,86 @@
-Absolutely. Here is a **user story** crafted from the **business goals** you defined, staying grounded in **product management language** but now expressed using the user story format commonly used in agile environments (e.g., with Acceptance Criteria). This bridges strategic intent with actionable delivery.
+
+Great question. If the  **user story is coming from the data science team** , the framing should reflect their goals: ensuring  **model performance, interpretability, data consistency** , and reducing  **prompt ambiguity** . While the structure of the story remains similar, the **persona shifts** from product manager to data scientist, and the motivation moves toward **supporting model behavior** and  **improving downstream outputs** .
 
 ---
 
-## ✅ **User Story: Hierarchical Precalculation for Financial Insight Clarity**
+## ✅ **Adjusted User Story (Data Science Perspective)**
 
-**Title:** Introduce Hierarchical Precalculation Structure to Improve Insight Clarity and Model Guidance
+**Title:** Structure Precalculated Financial Metrics Hierarchically to Improve Model Interpretability and Prompt Performance
 
-**As** a Credit Intelligence product manager,
+**As** a data scientist working on Credit Intelligence,
 
-**I want** financial metrics in our pipeline to follow a clear hierarchical structure—separating raw inputs, intermediate calculations, and final insights—
+**I want** precalculated financial data to be structured hierarchically into raw inputs, intermediate calculations, and derived insights,
 
-**So that** our generative model can produce clearer, more accurate narratives, and our analysts can trace insights back to source data with confidence.
+**So that** the model receives unambiguous, context-rich inputs that support more accurate and explainable credit narratives.
 
 ---
 
 ## 🎯 **Acceptance Criteria**
 
-| **ID**                                                                      | **Acceptance Criteria**                                                                                                                                                                 |
-| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **AC1**                                                                     | The system organizes precalculated financial metrics into three distinct tiers:                                                                                                               |
-| →`raw_inputs`(e.g., cash, loans, period flag)                                  |                                                                                                                                                                                               |
-| →`intermediate_metrics`(e.g., total external financing, financing requirement) |                                                                                                                                                                                               |
-| →`derived_insights`(e.g., funding scenario, financing position narrative)      |                                                                                                                                                                                               |
-| **AC2**                                                                     | Each final business insight (e.g., “Financing Requirement funded by cash and external sources”) is supported by intermediate and raw data used in its calculation.                          |
-| **AC3**                                                                     | Metric names are**disambiguated**to prevent nested duplication (e.g., no "Total Assets" inside another "Total Assets") and follow a consistent naming convention.                       |
-| **AC4**                                                                     | Narrative outputs (e.g., funding rationale summaries) are generated using only the `derived_insights`layer and are safe to include in prompts without post-processing.                      |
-| **AC5**                                                                     | Existing flat year-over-year metrics (e.g., "Receivables in Days FR: Decreased by 9.10") are replaced with structured change representations (e.g.,`from`,`to`,`change`,`direction`). |
-| **AC6**                                                                     | The new structure is validated with the CB Tech indicators as a pilot, using FYE and YTD values provided in the reference email.                                                              |
-| **AC7**                                                                     | Prompt templates can explicitly select values from any layer in the hierarchy (e.g., pull `cash_after_financing`from `intermediate_metrics`) without requiring downstream data reshaping. |
-| **AC8**                                                                     | A toggle or config setting allows us to include or exclude legacy YoY metrics during the transition phase, enabling backward compatibility if needed.                                         |
+| **ID**                                                                 | **Acceptance Criteria**                                                                                                                                                                            |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **AC1**                                                                | All precalculated metrics must be organized into three structured tiers:                                                                                                                                 |
+| →`raw_inputs`(e.g., base values from financials)                          |                                                                                                                                                                                                          |
+| →`intermediate_metrics`(e.g., computed values like financing requirement) |                                                                                                                                                                                                          |
+| →`derived_insights`(e.g., summary narratives for prompts)                 |                                                                                                                                                                                                          |
+| **AC2**                                                                | Final narrative elements passed into the model (e.g., “Financing Requirement funded by external sources”) must be derived only from values in the `derived_insights`layer.                           |
+| **AC3**                                                                | Input data for the model must avoid naming collisions or duplication across layers (e.g., nested “Total Assets” values), to prevent model confusion.                                                   |
+| **AC4**                                                                | Each insight in the `derived_insights`layer must be traceable to its calculation path via metadata or references to upstream values.                                                                   |
+| **AC5**                                                                | Previously used flat year-over-year metrics are replaced with structured forms (e.g.,`from`,`to`,`change`,`direction`) that allow models to understand the magnitude and direction of change.    |
+| **AC6**                                                                | The CB Tech financing logic—including `financing_position`,`total_external_financing`, and `funding_scenario`—is implemented as the first hierarchical use case, validated against example data. |
+| **AC7**                                                                | The model’s prompt-generation logic must be tested to confirm it consumes the `derived_insights`layer and ignores lower-level inputs unless explicitly configured.                                    |
+| **AC8**                                                                | If legacy flat metrics are retained during transition, a configuration setting controls their inclusion to enable prompt testing and model A/B comparison.                                               |
 
 ---
 
-## 📘 **Example Usage Scenario**
+## 🧠 Rationale (From a Data Science Lens)
 
-> When generating a credit intelligence prompt, the system now pulls the `derived_insights.financing_position` value of `"Requirement"` and uses the `narrative_summary` field to construct a natural language explanation.
->
-> If needed, an analyst can trace that result to `intermediate_metrics.total_external_financing` and further to `raw_inputs.change_in_loans_related`.
-
----
-
-## 🛠 Supporting Notes
-
-* This story **does not introduce productization** (e.g., module registration or plug-ins).
-* It focuses solely on **cleanly structured, hierarchical logic** that improves:
-  * Model guidance
-  * Analyst trust
-  * Maintenance and testability of financial logic
+* **Model Behavior** : LLMs are sensitive to naming repetition and structure. Flattened or ambiguous metrics (e.g., nested “Total Assets”) degrade quality.
+* **Interpretability** : Clear traceability supports trust in generated insights and helps with regulatory audits or user questions.
+* **Prompt Precision** : Layered data supports better prompt tuning by providing the right level of abstraction (raw vs. interpreted).
+* **Data Hygiene** : Hierarchies prevent leakage of conflicting signals and help create cleaner, more semantically consistent inputs.
 
 ---
 
-Let me know if you'd like the corresponding  **Jira formatting** , a version tailored for  **developers** , or a stakeholder-ready version for review boards.
+## 🧪 Example Prompt Input (Before vs After)
+
+### **Before (Flat and Duplicative):**
+
+```
+"Total Assets": "Increased by 56.3MM",
+"Total Assets": "Includes Current Assets",
+"Current Assets": "Increased by 48.41MM"
+```
+
+### **After (Structured):**
+
+```json
+{
+  "intermediate_metrics": {
+    "total_assets_summary": {
+      "from": 655.21,
+      "to": 711.51,
+      "change": 56.3
+    }
+  },
+  "derived_insights": {
+    "narrative_summary": "Total assets increased by $56.3MM, driven primarily by a $48.41MM rise in current assets."
+  }
+}
+```
+
+---
+
+## 🔁 Optional Additions for DS Teams
+
+* Model validation checkpoints can test whether prompts built using hierarchical `derived_insights` lead to more accurate or concise generations.
+* Tracking performance of hierarchical vs. legacy prompts in production.
+* Schema enforcement or linting step before passing inputs to the model.
+
+---
+
+### Q: Want this as a Jira-ready card with subtasks and testing notes?
+
+### Q: Would it help to pair this story with prompt output samples or A/B test specs?
+
+Let me know how you’d like to extend this next—model eval framework, schema, or implementation planning!
