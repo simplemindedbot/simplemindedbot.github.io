@@ -1,94 +1,89 @@
-Here are user story components for each of the requirements you’ve outlined. These are written in standard format with Title, Description, and Acceptance Criteria using Gherkin-style where applicable.
+Here’s the updated user story that combines the first two into a single, coherent story, with the logic for determining annual vs. non-annual based on the upload location:
 
 ⸻
 
-1. Identify Annual vs Non-Annual Data in Uploaded File
+Determine Report Type Based on File Upload Location
 
 Description:
-As a data science engineer, I want to identify whether the uploaded file contains annual or non-annual data so that the model can treat the data appropriately during ingestion.
+As a data science engineer, I want to determine whether the uploaded file contains annual or non-annual data based on its upload location so that the ingestion process can apply the correct processing rules and downstream models can interpret the data accordingly.
 
-Acceptance Criteria:
-	•	GIVEN a file has been uploaded
-WHEN the file is parsed
-THEN the ingestion process should label the data as “annual” or “non-annual” based on in-file indicators (e.g., title, section headers, or dates)
-
-⸻
-
-2. Use File Upload Location as Identifier (CTech)
-
-Description:
-As a credit technology engineer, I want to use the file upload location as an identifier so that each file’s source can be reliably traced in downstream processing.
-
-Acceptance Criteria:
-	•	GIVEN a file is uploaded to a specific location
+Acceptance Criteria (Gherkin):
+	•	GIVEN a file is uploaded to a designated upload location
 WHEN the ingestion process begins
-THEN the system should log and associate the file with its upload location for audit and classification purposes
+THEN the system should infer the report type (annual or non-annual) based solely on the configured upload location associated with that file path
+	•	GIVEN a file is uploaded to an undefined or misconfigured location
+WHEN the ingestion process begins
+THEN the system should raise an alert or error indicating the report type cannot be determined
+	•	GIVEN the report type has been determined via upload location
+WHEN the file is ingested
+THEN the determined type should be logged and tagged as metadata with the file in the data store
 
 ⸻
 
-3. Include Section Identifiers in Single File Input
+Let me know if you’d like to include fallbacks or override mechanisms (e.g., user-specified metadata), or if this should be expanded to support future sources beyond file uploads.
+
+Q1: Should this logic support overrides if the file includes internal markers that contradict the upload location?
+Q2: Do you want a story covering how these locations are maintained and mapped in the system config?
+Q3: Would you like to define and document the accepted upload locations and their associated report types?
+
+Thanks, that helps clarify the intent. Here’s a revised version of the third user story, now focused specifically on generating the file for delivery to the LLM, using section headers to distinguish between content types:
+
+⸻
+
+Generate Single Structured File for LLM Ingestion
 
 Description:
-As a credit technology engineer, I want to ensure the system supports single file uploads containing multiple sections, each with a unique identifier, so that ingestion can handle compound documents.
+As a credit technology engineer, I want to generate a single structured file for delivery to the LLM, using section headers to separate distinct content areas within the document, so that the LLM can accurately parse and analyze multiple types of data from a unified source.
 
-Acceptance Criteria:
-	•	GIVEN a single file contains multiple document sections
-WHEN the file is processed
-THEN each section should be tagged with its own identifier for model segmentation and analysis
+Acceptance Criteria (Gherkin):
+	•	GIVEN one or more document inputs are uploaded (e.g., annual statement, YTD statement, footnotes)
+WHEN the ingestion system processes these inputs
+THEN a single consolidated file should be created for delivery to the LLM
+	•	GIVEN distinct document types (e.g., annual data, YTD data, footnotes)
+WHEN the consolidated file is generated
+THEN each content section must begin with a clearly labeled section header (e.g., ## Annual Statement, ## YTD Statement, ## Footnotes) that persists through delivery
+	•	GIVEN the file has been structured with section headers
+WHEN it is passed to the LLM
+THEN the structure must be preserved in a machine-readable format (e.g., Markdown, JSON with section keys) that supports accurate parsing by the model
+	•	GIVEN malformed or ambiguous inputs
+WHEN the file generation process is triggered
+THEN the system should log a warning and continue only with valid sections, or halt with an error based on severity thresholds
 
 ⸻
 
-4. Evaluate Additional Data Integrity Controls
+Let me know if you’d like to specify the file format (e.g., .md, .json, .txt) or describe what a valid section header should contain (e.g., metadata, date, report type).
+
+Q1: Should this story include LLM-specific constraints such as max token limits or formatting guidance?
+Q2: Do you want the system to insert metadata (e.g., source file name, upload date) into the structured file?
+Q3: Should there be a verification step to validate that all expected sections are included before delivery to the LLM?
+
+Here’s a combined version of stories 5 and 6, which now describe how footnotes are associated with the correct reporting period using the date on the first page of the uploaded document:
+
+⸻
+
+Associate Annual Footnotes with Correct Optimist Statement Using Document Date
 
 Description:
-As a product manager, I want to evaluate additional data integrity controls that can be applied to the uploaded reports so that the ingestion process remains robust and trustworthy.
+As a data science and CBTech engineer, I want to use the date on the first page of an uploaded file to associate annual footnotes with the most recent annual Optimist statement, so that the ingestion process accurately maps narrative commentary to the correct financial period.
 
-Acceptance Criteria:
-	•	GIVEN a set of ingestion control options
-WHEN product review occurs
-THEN product should identify additional controls (e.g., checksums, schema validation, duplication detection) to implement or defer with rationale
-
-⸻
-
-5. Associate Annual Footnotes with Most Recent Annual Optimist Statement
-
-Description:
-As a data science engineer, I want to ensure annual footnotes are correctly associated with the most recent annual Optimist financial statement so that the model uses the correct contextual data.
-
-Acceptance Criteria:
-	•	GIVEN an uploaded file contains annual footnotes
-AND an annual Optimist statement has been selected
-WHEN ingestion occurs
-THEN the footnotes should be mapped to the corresponding statement if they match in reporting period or naming convention
+Acceptance Criteria (Gherkin):
+	•	GIVEN a file containing annual footnotes is uploaded
+WHEN the ingestion process begins
+THEN the system should extract the date from the first page of the document
+	•	GIVEN the extracted first-page date
+WHEN compared to available Optimist statements
+THEN the system should associate the footnotes with the most recent annual Optimist statement that matches the reporting period indicated by the date
+	•	GIVEN the footnotes do not clearly align with an annual Optimist statement
+WHEN no match is found
+THEN the system should log the mismatch and flag the file for manual review
+	•	GIVEN successful association of footnotes and Optimist data
+WHEN the LLM input is generated
+THEN the footnotes should be included under a clearly labeled section header referencing the appropriate financial period
 
 ⸻
 
-6. Use First Page Date to Identify Footnote Period (CBTech)
+Let me know if you want to define how close the dates must be to constitute a “match” (e.g., same fiscal year, within 30 days), or if we should create fallback rules when dates are missing or ambiguous.
 
-Description:
-As a CBTech engineer, I want to use the date on the first page of the document to identify the applicable period for the associated footnotes so that they can be correctly indexed.
-
-Acceptance Criteria:
-	•	GIVEN a document is uploaded
-WHEN the first page date is extracted
-THEN the footnotes should be tagged with the period identified by that date
-
-⸻
-
-7. Validate Date Logic Across Additional Statements
-
-Description:
-As a product manager, I want to validate that the logic for using the first page date to identify footnote periods holds across multiple statement formats so that ingestion rules can be generalized confidently.
-
-Acceptance Criteria:
-	•	GIVEN a sample of annual and YTD statements
-WHEN product reviews the footnote-date alignment logic
-THEN product should confirm whether this logic holds or identify exceptions requiring rule changes
-
-⸻
-
-Let me know if you’d like these grouped into Epics, or turned into Jira-friendly format with labels and task types.
-
-Q1: Would you like these stories grouped by theme (e.g., ingestion logic, metadata tagging, validation)?
-Q2: Should I create Epics and Features for organizing these into a Jira backlog?
-Q3: Do you want a shared definition of “annual” vs. “non-annual” to include in the documentation for these stories?
+Q1: Should the system prioritize matching based on fiscal year, calendar year, or a configurable threshold?
+Q2: Do we need to support edge cases like amended footnotes or supplemental disclosures issued after the original statement?
+Q3: Should a confidence score be calculated and stored for each footnote-to-statement match?
