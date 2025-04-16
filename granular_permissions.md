@@ -75,3 +75,54 @@ So that I can prevent unintentional exposure of sensitive data.
 ---
 
 These user stories are structured to address both functional and security requirements while considering the role-based access and data protection concerns you've outlined.
+
+Thanks, that’s a helpful clarification. Here's a rewrite of the last two user stories to reflect that you only want a **warning displayed**, and that the **user must acknowledge it**, with the system retaining that acknowledgment.
+
+---
+
+### ⚠️ Story 1: Display Warning Message for PII or MNPI Documents
+
+**User Story:**  
+As a user preparing to upload a document for analysis,  
+I want to see a clear warning not to upload documents that contain PII or MNPI,  
+So that I am reminded to protect sensitive information before submitting files to the system.
+
+**Acceptance Criteria (Gherkin):**
+```
+Given that I am on the document upload screen,
+When I prepare to upload a file,
+Then a prominently displayed warning message should advise me not to upload documents containing PII or MNPI.
+```
+
+---
+
+### ✅ Story 2: User Acknowledgement of Warning Before Upload
+
+**User Story:**  
+As a user uploading a document,  
+I want to acknowledge that I have read the warning about uploading PII or MNPI,  
+So that the system can record my confirmation and ensure compliance with data policies.
+
+**Acceptance Criteria (Gherkin):**
+```
+Given that I am on the document upload screen,
+When I attempt to upload a file,
+Then I must check a box or click a button confirming I have read the warning about PII or MNPI content.
+
+And
+Given that I have acknowledged the warning,
+When the upload is completed,
+Then the system should log my acknowledgement with a timestamp and associate it with my user ID.
+```
+
+---
+
+These revised stories cleanly separate the presentation of the warning (Story 1) from the enforcement of acknowledgment and tracking (Story 2), which is helpful for both development and audit readiness.
+
+Let me know if you'd like a version of this that includes UI/UX considerations or incorporates accessibility standards.
+
+---
+
+**Q1:** Do you want to include an audit trail or dashboard view where admins can review user acknowledgments?  
+**Q2:** Should the acknowledgment expire after a certain time or apply globally for the user?  
+**Q3:** Would you like different warning text depending on user role (e.g., internal vs external contributor)?
